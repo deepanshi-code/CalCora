@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#15171c">
+  <meta name="color-scheme" content="dark light">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Calcora">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <title>Calcora - Scientific Calculator, Calculus &amp; Unit Tools</title>
+  <meta name="description" content="Calcora: a scientific calculator with graphing, calculus that checks its own answers, unit and currency converters. Works offline on phone and laptop.">
+  
+  <!-- Google Fonts for Scientific Readouts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css?v=4.13">
+</head>
+<body>
+  <!-- Floating background canvas and glow orbs -->
+  <canvas id="vector-field-bg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; pointer-events: none; opacity: 0.22; transition: opacity 0.5s ease;"></canvas>
+  <div class="grid-overlay"></div>
+  <div class="glowing-orb orb-1"></div>
+  <div class="glowing-orb orb-2"></div>
+  <div class="glowing-orb orb-3"></div>
+
+  <div class="app-container" id="app">
+    
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <!-- Calcora mark: a "C" with a check, i.e. your answer is verified -->
+        <svg class="logo-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="calcora-grad" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#3b82f6"/>
+              <stop offset="1" stop-color="#8b5cf6"/>
+            </linearGradient>
+          </defs>
+          <path d="M22.36 23.06 A9.5 9.5 0 1 1 22.36 8.94" stroke="url(#calcora-grad)" stroke-width="4" stroke-linecap="round"/>
+          <polyline points="14.26,16.1 16.74,18.73 21.46,13.27" stroke="#e2e8f0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="logo-text">CALC<span>ORA</span></span>
+      </div>
+      
+      <ul class="nav-links">
+        <li class="nav-item">
+          <button class="nav-btn active" data-target="calculator-panel" id="nav-calc">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+              <line x1="8" y1="6" x2="16" y2="6"></line>
+              <line x1="16" y1="14" x2="16" y2="18"></line>
+              <path d="M16 10h.01"></path>
+              <path d="M12 10h.01"></path>
+              <path d="M8 10h.01"></path>
+              <path d="M12 14h.01"></path>
+              <path d="M8 14h.01"></path>
+              <path d="M12 18h.01"></path>
+              <path d="M8 18h.01"></path>
+            </svg>
+            <span>Calculator</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-btn" data-target="converter-panel" id="nav-converter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 3 21 3 21 8"></polyline>
+              <line x1="4" y1="20" x2="21" y2="3"></line>
+              <polyline points="21 16 21 21 16 21"></polyline>
+              <line x1="15" y1="15" x2="21" y2="21"></line>
+              <line x1="4" y1="4" x2="9" y2="9"></line>
+            </svg>
+            <span>Unit Converter</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-btn" data-target="bmi-panel" id="nav-bmi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              <circle cx="12" cy="8" r="1" fill="currentColor"></circle>
+            </svg>
+            <span>BMI</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-btn" data-target="currency-panel" id="nav-currency">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            <span>Currency</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-btn" data-target="formula-panel" id="nav-formula">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              <line x1="9" y1="9" x2="15" y2="9"/>
+              <line x1="9" y1="12" x2="12" y2="12"/>
+            </svg>
+            <span>Formulas</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-btn" data-target="calculus-panel" id="nav-calculus">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3 L7 21"/>
+              <path d="M3 12 H11"/>
+              <path d="M17 3 C17 3, 13 8, 13 12 C13 16, 17 21, 17 21"/>
+              <path d="M21 3 C21 3, 17 8, 17 12 C17 16, 21 21, 21 21"/>
+            </svg>
+            <span>Calculus</span>
+          </button>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="footer-action" id="audio-toggle-btn" title="Toggle audio feedback">
+          <svg id="audio-icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg id="audio-icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+          <span>Sound FX</span>
+        </button>
+        
+        <button class="footer-action" id="theme-menu-btn" title="Select theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <span>Themes</span>
+        </button>
+      </div>
+
+      <!-- Floating Theme Selector Menu -->
+      <div class="theme-selector-popover" id="theme-popover">
+        <button class="theme-opt" data-theme="obsidian">
+          <span class="theme-dot obsidian"></span>
+          Dark
+        </button>
+        <button class="theme-opt" data-theme="frost">
+          <span class="theme-dot frost"></span>
+          Light
+        </button>
+        <button class="theme-opt" data-theme="solar">
+          <span class="theme-dot solar"></span>
+          Handheld LCD
+        </button>
+        <button class="theme-opt" data-theme="oscilloscope">
+          <span class="theme-dot oscilloscope"></span>
+          Retro CRT
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="main-content">
+      
+      <!-- HEADER -->
+      <header class="main-header">
+        <div class="header-title-section">
+          <h1 id="dynamic-title">Calculator</h1>
+          <p id="dynamic-subtitle">Scientific calculator with history, constants and a function graph</p>
+        </div>
+        <div class="header-status-bar">
+          <div class="brand-chip" aria-label="Calcora">CALC<span>ORA</span></div>
+          <div class="time-display" id="time-display">12:00:00 PM</div>
+        </div>
+      </header>
+
+      <!-- 1. SCIENTIFIC CALCULATOR PANEL -->
+      <section class="dashboard-panel active" id="calculator-panel">
+        <div class="calculator-grid-layout">
+          <!-- MAIN KEYPAD & SCREEN -->
+          <div class="calc-main-panel glass-card">
+            <!-- Screen Display -->
+            <div class="calc-display" id="calc-screen">
+              <div class="calc-screen-top">
+                <div class="calc-mode-indicator" id="calc-angle-mode">DEG</div>
+                <div class="calc-status-indicator" id="calc-status-indicator">READY</div>
+              </div>
+              <div class="calc-expression" id="calc-expression-display"></div>
+              <div class="calc-result" id="calc-result-display">0</div>
+            </div>
+            
+            <!-- Grid Keyboard -->
+            <div class="calc-keyboard" id="calc-keyboard">
+              <!-- Left Section: Scientific & Memory functions -->
+              <div class="calc-keyboard-section calc-sci-section">
+                <button class="calc-btn op-sci" id="calc-deg-rad">Rad</button>
+                <button class="calc-btn op-sci" id="calc-abs">abs</button>
+                <button class="calc-btn op-sci" id="calc-mod">mod</button>
+                <button class="calc-btn op-sci" id="calc-pi">π</button>
+                <button class="calc-btn op-sci" id="calc-e">e</button>
+
+                <button class="calc-btn op-sci" id="calc-sin">sin</button>
+                <button class="calc-btn op-sci" id="calc-asin">sin⁻¹</button>
+                <button class="calc-btn op-sci" id="calc-pow">xʸ</button>
+                <button class="calc-btn op-sci" id="calc-sqrt">√</button>
+                <button class="calc-btn op-sci" id="calc-log">log</button>
+
+                <button class="calc-btn op-sci" id="calc-cos">cos</button>
+                <button class="calc-btn op-sci" id="calc-acos">cos⁻¹</button>
+                <button class="calc-btn op-sci" id="calc-sqr">x²</button>
+                <button class="calc-btn op-sci" id="calc-cbrt">³√</button>
+                <button class="calc-btn op-sci" id="calc-ln">ln</button>
+
+                <button class="calc-btn op-sci" id="calc-tan">tan</button>
+                <button class="calc-btn op-sci" id="calc-atan">tan⁻¹</button>
+                <button class="calc-btn op-sci" id="calc-fact">x!</button>
+                <button class="calc-btn op-sci" id="calc-percent">%</button>
+                <button class="calc-btn op-sci" id="calc-inv">1/x</button>
+
+                <button class="calc-btn op-sci" id="calc-mc">MC</button>
+                <button class="calc-btn op-sci" id="calc-mr">MR</button>
+                <button class="calc-btn op-sci" id="calc-mplus">M+</button>
+                <button class="calc-btn op-sci" id="calc-mminus">M-</button>
+                <button class="calc-btn op-sci" id="calc-rand">rnd</button>
+              </div>
+
+              <!-- Right Section: Standard math operations & digits -->
+              <div class="calc-keyboard-section calc-basic-section">
+                <button class="calc-btn op-fn" id="calc-clear">C</button>
+                <button class="calc-btn op-fn" id="calc-backspace">⌫</button>
+                <button class="calc-btn op-fn" id="calc-lparent">(</button>
+                <button class="calc-btn op-fn" id="calc-rparent">)</button>
+                <button class="calc-btn op-math" id="calc-div">÷</button>
+
+                <button class="calc-btn op-num" id="calc-7">7</button>
+                <button class="calc-btn op-num" id="calc-8">8</button>
+                <button class="calc-btn op-num" id="calc-9">9</button>
+                <button class="calc-btn op-math" id="calc-mul">×</button>
+                <button class="calc-btn op-sci" id="calc-ten-pow">10ˣ</button>
+
+                <button class="calc-btn op-num" id="calc-4">4</button>
+                <button class="calc-btn op-num" id="calc-5">5</button>
+                <button class="calc-btn op-num" id="calc-6">6</button>
+                <button class="calc-btn op-math" id="calc-sub">−</button>
+                <button class="calc-btn op-sci" id="calc-exp-e">eˣ</button>
+
+                <button class="calc-btn op-num" id="calc-1">1</button>
+                <button class="calc-btn op-num" id="calc-2">2</button>
+                <button class="calc-btn op-num" id="calc-3">3</button>
+                <button class="calc-btn op-math" id="calc-add">+</button>
+                <button class="calc-btn op-sci" id="calc-neg">±</button>
+
+                <button class="calc-btn op-num" id="calc-0">0</button>
+                <button class="calc-btn op-num" id="calc-decimal">.</button>
+                <button class="calc-btn op-equal" id="calc-equal">=</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- SIDE UTILITY PANEL (TABS) -->
+          <div class="calc-side-utility glass-card">
+            <!-- Tabs selection -->
+            <div class="utility-tabs">
+              <button class="utility-tab-btn active" data-utility-tab="history">HISTORY</button>
+              <button class="utility-tab-btn" data-utility-tab="constants">CONSTANTS</button>
+              <button class="utility-tab-btn" data-utility-tab="grapher">GRAPH</button>
+            </div>
+            
+            <div class="utility-content-wrapper">
+              <!-- TAB 1: HISTORY -->
+              <div class="utility-tab-pane active" id="pane-history">
+                <div class="history-header">
+                  <h3>History</h3>
+                  <button class="clear-history-btn" id="clear-history-btn">Clear All</button>
+                </div>
+                <div class="history-list" id="history-list">
+                  <div class="empty-history-text" id="empty-history-text">No calculations yet</div>
+                </div>
+              </div>
+              
+              <!-- TAB 2: CONSTANTS -->
+              <div class="utility-tab-pane" id="pane-constants" style="display: none;">
+                <div class="constants-header">
+                  <h3>Physical Constants</h3>
+                  <p class="constants-subheader">Click symbol to insert value</p>
+                </div>
+                <div class="constants-grid">
+                  <button class="constant-btn" data-value="299792458" title="Speed of Light in Vacuum: 299,792,458 m/s">
+                    <span class="const-sym">c</span>
+                    <span class="const-name">Light Speed</span>
+                  </button>
+                  <button class="constant-btn" data-value="6.62607015e-34" title="Planck Constant: 6.62607015 × 10^-34 J·s">
+                    <span class="const-sym">h</span>
+                    <span class="const-name">Planck Const</span>
+                  </button>
+                  <button class="constant-btn" data-value="6.67430e-11" title="Newtonian Constant of Gravitation: 6.67430 × 10^-11 m^3/(kg·s^2)">
+                    <span class="const-sym">G</span>
+                    <span class="const-name">Gravitational</span>
+                  </button>
+                  <button class="constant-btn" data-value="6.02214076e23" title="Avogadro Constant: 6.02214076 × 10^23 mol^-1">
+                    <span class="const-sym">N<sub>A</sub></span>
+                    <span class="const-name">Avogadro No.</span>
+                  </button>
+                  <button class="constant-btn" data-value="1.602176634e-19" title="Elementary Charge: 1.602176634 × 10^-19 C">
+                    <span class="const-sym">e</span>
+                    <span class="const-name">Electron Chg</span>
+                  </button>
+                  <button class="constant-btn" data-value="1.380649e-23" title="Boltzmann Constant: 1.380649 × 10^-23 J/K">
+                    <span class="const-sym">k<sub>B</sub></span>
+                    <span class="const-name">Boltzmann</span>
+                  </button>
+                  <button class="constant-btn" data-value="8.314462618" title="Molar Gas Constant: 8.314462618 J/(mol·K)">
+                    <span class="const-sym">R</span>
+                    <span class="const-name">Gas Constant</span>
+                  </button>
+                  <button class="constant-btn" data-value="9.1093837e-31" title="Electron Mass: 9.1093837 × 10^-31 kg">
+                    <span class="const-sym">m<sub>e</sub></span>
+                    <span class="const-name">Electron Mass</span>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- TAB 3: FUNCTION GRAPH -->
+              <div class="utility-tab-pane" id="pane-grapher" style="display: none;">
+                <div class="grapher-header">
+                  <h3>Function Plotter</h3>
+                </div>
+                <div class="grapher-canvas-container">
+                  <canvas id="graph-canvas"></canvas>
+                </div>
+                <div class="grapher-controls">
+                  <div class="graph-input-row">
+                    <span class="graph-f-prefix">y =</span>
+                    <input type="text" id="graph-function-input" value="sin(x)" placeholder="e.g. sin(x), x^2, cos(x)">
+                    <button id="graph-plot-btn">PLOT</button>
+                  </div>
+                  <div class="graph-scale-row">
+                    <span class="scale-label" id="graph-scale-label">Range: X[-10,10]</span>
+                    <button class="scale-btn" id="graph-zoom-in" title="Zoom In">+</button>
+                    <button class="scale-btn" id="graph-zoom-out" title="Zoom Out">−</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. UNIT CONVERTER PANEL -->
+      <section class="dashboard-panel" id="converter-panel">
+        <div class="uc-layout">
+          <div class="uc-cats" id="uc-cats" role="tablist" aria-label="Quantity to convert"></div>
+
+          <div class="uc-card glass-card">
+            <div class="uc-row">
+              <label class="uc-label" for="uc-from-value">From</label>
+              <input id="uc-from-value" class="uc-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="1">
+              <select id="uc-from-unit" class="uc-select" aria-label="From unit"></select>
+            </div>
+
+            <div class="uc-mid">
+              <button id="uc-swap" class="uc-swap" type="button" aria-label="Swap the two units">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="7 4 7 20"/><polyline points="3 8 7 4 11 8"/><polyline points="17 20 17 4"/><polyline points="13 16 17 20 21 16"/></svg>
+              </button>
+              <div id="uc-note" class="uc-note" aria-live="polite"></div>
+            </div>
+
+            <div class="uc-row">
+              <label class="uc-label" for="uc-to-value">To</label>
+              <input id="uc-to-value" class="uc-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false">
+              <select id="uc-to-unit" class="uc-select" aria-label="To unit"></select>
+            </div>
+          </div>
+
+          <div class="uc-all-wrap glass-card">
+            <h3 class="uc-all-title">The same value in every unit</h3>
+            <div id="uc-all" class="uc-all-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. BMI FITNESS PANEL -->
+      <section class="dashboard-panel" id="bmi-panel">
+        <div class="bmi-layout">
+          <!-- Inputs Card -->
+          <div class="bmi-input-card glass-card">
+            <h2>
+              <!-- Heart rate / fitness icon -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+              </svg>
+              Body Mass Index
+            </h2>
+            
+            <div class="bmi-unit-toggle">
+              <button class="bmi-unit-btn active" id="bmi-metric-btn">METRIC (KG / CM)</button>
+              <button class="bmi-unit-btn" id="bmi-imperial-btn">IMPERIAL (LB / FT+IN)</button>
+            </div>
+            
+            <div class="bmi-form-group">
+              <label class="bmi-field-label">Height</label>
+              <!-- Metric Height Inputs -->
+              <div class="bmi-input-row" id="bmi-metric-height-row">
+                <div class="bmi-input-box">
+                  <input type="number" id="bmi-cm" placeholder="Height" min="30" max="300" value="170">
+                  <span class="bmi-input-unit">cm</span>
+                </div>
+              </div>
+              <!-- Imperial Height Inputs -->
+              <div class="bmi-input-row" id="bmi-imperial-height-row" style="display: none;">
+                <div class="bmi-input-box">
+                  <input type="number" id="bmi-feet" placeholder="Ft" min="1" max="10" value="5">
+                  <span class="bmi-input-unit">ft</span>
+                </div>
+                <div class="bmi-input-box">
+                  <input type="number" id="bmi-inches" placeholder="In" min="0" max="11" value="7">
+                  <span class="bmi-input-unit">in</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bmi-form-group">
+              <label class="bmi-field-label">Weight</label>
+              <div class="bmi-input-row">
+                <div class="bmi-input-box" id="bmi-weight-box">
+                  <input type="number" id="bmi-weight" placeholder="Weight" min="2" max="600" value="70">
+                  <span class="bmi-input-unit" id="bmi-weight-unit-lbl">kg</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Results & Gauges Card -->
+          <div class="bmi-result-card glass-card">
+            <div class="bmi-gauge-container">
+              <!-- SVG Speedometer Gauge for BMI Display -->
+              <svg class="bmi-gauge-svg" viewBox="0 0 200 120">
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12" stroke-linecap="round"/>
+                
+                <!-- Colored segments -->
+                <path d="M 20 100 A 80 80 0 0 1 60 42" fill="none" stroke="var(--accent-success)" stroke-width="12" stroke-dasharray="1 1" style="opacity: 0.8;"/>
+                <path d="M 60 42 A 80 80 0 0 1 120 30" fill="none" stroke="var(--accent-primary)" stroke-width="12" stroke-dasharray="1 1" style="opacity: 0.8;"/>
+                <path d="M 120 30 A 80 80 0 0 1 158 55" fill="none" stroke="var(--accent-warning)" stroke-width="12" stroke-dasharray="1 1" style="opacity: 0.8;"/>
+                <path d="M 158 55 A 80 80 0 0 1 180 100" fill="none" stroke="var(--accent-danger)" stroke-width="12" stroke-dasharray="1 1" style="opacity: 0.8;"/>
+                
+                <!-- Dynamic Pointer Needle -->
+                <polygon id="bmi-needle" points="98,100 100,20 102,100" fill="var(--text-main)" style="transform-origin: 100px 100px; transform: rotate(-90deg); transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);"/>
+                <circle cx="100" cy="100" r="6" fill="var(--text-main)"/>
+              </svg>
+              
+              <div class="bmi-gauge-center-val">
+                <span class="bmi-val-num" id="bmi-score-value">24.2</span>
+                <span class="bmi-val-lbl">Body Mass Index</span>
+              </div>
+            </div>
+            
+            <div class="bmi-status-badge bmi-status-normal" id="bmi-category-badge">
+              Normal Weight
+            </div>
+            
+            <div class="bmi-advice-box">
+              <div class="bmi-advice-title" id="bmi-range-advice">Healthy weight range for your height: 53.5 kg - 72.2 kg</div>
+              <p class="bmi-advice-text" id="bmi-detail-advice">
+                Your body weight is within the healthy range. Maintaining a normal weight lowers the risk of developing heart conditions, type 2 diabetes, and other health issues. Continue a balanced diet and active lifestyle.
+              </p>
+              <p class="bmi-disclaimer">
+                Informational only, not medical advice. BMI uses adult WHO cut-offs; it does not apply to children or
+                teenagers and does not account for muscle mass, age or body composition.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. RUPEES CURRENCY PANEL -->
+      <section class="dashboard-panel" id="currency-panel">
+        <div class="currency-layout">
+          <!-- Calculator Card -->
+          <div class="currency-card glass-card">
+            <h2>
+              <!-- Dollar / Rupees coin swap icon -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              Currency Converter
+            </h2>
+            
+            <div class="exchange-calculator">
+              <!-- Source Currency Input -->
+              <div class="currency-input-box">
+                <div class="currency-select-row">
+                  <div class="currency-flag-name">
+                    <span class="currency-flag" id="source-currency-flag">🇮🇳</span>
+                    <select class="currency-dropdown" id="source-currency-select">
+                      <option value="INR">INR (Rupees)</option>
+                      <option value="USD">USD (Dollar)</option>
+                      <option value="EUR">EUR (Euro)</option>
+                      <option value="GBP">GBP (Pound)</option>
+                      <option value="JPY">JPY (Yen)</option>
+                      <option value="AUD">AUD (Australian $)</option>
+                      <option value="CAD">CAD (Canadian $)</option>
+                      <option value="CHF">CHF (Swiss Franc)</option>
+                      <option value="CNY">CNY (Yuan)</option>
+                      <option value="AED">AED (Dirham)</option>
+                      <option value="SAR">SAR (Riyal)</option>
+                    </select>
+                  </div>
+                  <span class="convert-label">From</span>
+                </div>
+                <input type="number" class="currency-val-input" id="source-currency-input" value="100" min="0" step="any">
+              </div>
+              
+              <!-- Swap row -->
+              <div class="swap-currency-row">
+                <button class="swap-currency-btn" id="swap-currency-btn" title="Swap currencies">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                  </svg>
+                </button>
+              </div>
+              
+              <!-- Target Currency Input -->
+              <div class="currency-input-box">
+                <div class="currency-select-row">
+                  <div class="currency-flag-name">
+                    <span class="currency-flag" id="target-currency-flag">🇺🇸</span>
+                    <select class="currency-dropdown" id="target-currency-select">
+                      <option value="USD">USD (Dollar)</option>
+                      <option value="INR" selected>INR (Rupees)</option>
+                      <option value="EUR">EUR (Euro)</option>
+                      <option value="GBP">GBP (Pound)</option>
+                      <option value="JPY">JPY (Yen)</option>
+                      <option value="AUD">AUD (Australian $)</option>
+                      <option value="CAD">CAD (Canadian $)</option>
+                      <option value="CHF">CHF (Swiss Franc)</option>
+                      <option value="CNY">CNY (Yuan)</option>
+                      <option value="AED">AED (Dirham)</option>
+                      <option value="SAR">SAR (Riyal)</option>
+                    </select>
+                  </div>
+                  <span class="convert-label">To</span>
+                </div>
+                <input type="number" class="currency-val-input" id="target-currency-input" value="1.20" readonly>
+              </div>
+              
+              <div class="exchange-rate-disclaimer">
+                <span id="rate-formula-display">1 INR = 0.0120 USD</span>
+                <span id="rates-updated" class="rates-updated">Approximate offline rates</span>
+                <button class="refresh-rates-btn" id="refresh-rates-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 4v6h-6"></path>
+                    <path d="M1 20v-6h6"></path>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  </svg>
+                  <span>Sync live rates</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Rates Table Card -->
+          <div class="currency-card glass-card quick-rates-card">
+            <h3>Rates against INR</h3>
+            <div class="quick-rates-list" id="quick-rates-list">
+              <!-- Rates items populated dynamically -->
+              <div class="quick-rate-item">
+                <div class="quick-rate-item-left"><span>🇺🇸</span><span>USD</span></div>
+                <div class="quick-rate-item-val" id="rate-usd">₹83.45</div>
+              </div>
+              <div class="quick-rate-item">
+                <div class="quick-rate-item-left"><span>🇪🇺</span><span>EUR</span></div>
+                <div class="quick-rate-item-val" id="rate-eur">₹90.12</div>
+              </div>
+              <div class="quick-rate-item">
+                <div class="quick-rate-item-left"><span>🇬🇧</span><span>GBP</span></div>
+                <div class="quick-rate-item-val" id="rate-gbp">₹105.80</div>
+              </div>
+              <div class="quick-rate-item">
+                <div class="quick-rate-item-left"><span>🇯🇵</span><span>JPY</span></div>
+                <div class="quick-rate-item-val" id="rate-jpy">₹0.534</div>
+              </div>
+              <div class="quick-rate-item">
+                <div class="quick-rate-item-left"><span>🇦🇺</span><span>AUD</span></div>
+                <div class="quick-rate-item-val" id="rate-aud">₹55.20</div>
+              </div>
+              <div class="quick-rate-item">
+                <div class="quick-rate-item-left"><span>🇨🇦</span><span>CAD</span></div>
+                <div class="quick-rate-item-val" id="rate-cad">₹60.95</div>
+              </div>
+              <div class="quick-rate-item">
+                <div class="quick-rate-item-left"><span>🇦🇪</span><span>AED</span></div>
+                <div class="quick-rate-item-val" id="rate-aed">₹22.72</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. FORMULA REFERENCE PANEL -->
+      <section class="dashboard-panel" id="formula-panel">
+        <div class="formula-panel-layout">
+          <!-- Search Bar -->
+          <div class="formula-search-bar">
+            <svg class="formula-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="formula-search-input" placeholder="Search formulas… (e.g. area, velocity, Ohm, interest)" autocomplete="off">
+          </div>
+
+          <!-- Category Filter Pills -->
+          <div class="formula-categories" id="formula-categories">
+            <button class="formula-cat-btn active" data-cat="all">All</button>
+            <button class="formula-cat-btn" data-cat="geometry">Geometry</button>
+            <button class="formula-cat-btn" data-cat="algebra">Algebra</button>
+            <button class="formula-cat-btn" data-cat="physics">Physics</button>
+            <button class="formula-cat-btn" data-cat="trigonometry">Trigonometry</button>
+            <button class="formula-cat-btn" data-cat="statistics">Statistics</button>
+            <button class="formula-cat-btn" data-cat="chemistry">Chemistry</button>
+            <button class="formula-cat-btn" data-cat="finance">Finance</button>
+          </div>
+
+          <!-- Results -->
+          <div class="formula-results-area" id="formula-results-area">
+            <!-- Dynamically populated by formulas.js -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. CALCULUS TOOLS PANEL -->
+      <section class="dashboard-panel" id="calculus-panel">
+        <div class="calculus-layout">
+
+          <!-- DIFFERENTIATION CARD -->
+          <div class="calculus-card glass-card">
+            <h2>
+              <span class="calc-card-icon">d/dx</span>
+              Differentiation
+            </h2>
+
+            <div class="calculus-input-group">
+              <label class="calculus-input-label">Function f(x)</label>
+              <input class="calculus-input" id="diff-function-input" type="text" placeholder="e.g. x^3 + 2*x^2 - 5*x + 1" autocomplete="off">
+            </div>
+
+            <div class="calculus-input-group">
+              <label class="calculus-input-label">Point x = a (optional, for numerical value)</label>
+              <input class="calculus-input" id="diff-point-input" type="text" placeholder="e.g. 2  (leave blank for symbolic)" autocomplete="off">
+            </div>
+
+            <button class="calculus-btn" id="diff-calculate-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 3l14 9-14 9V3z"/>
+              </svg>
+              Differentiate
+            </button>
+
+            <div class="calculus-result-box" id="diff-result-box">
+              <span class="calculus-result-label">Derivative f′(x)</span>
+              <div class="calculus-result-value" id="diff-result-value">Enter a function above and click Differentiate</div>
+              <div class="calculus-result-steps" id="diff-result-steps"></div>
+            </div>
+
+            <p class="calculus-note">Any combination of polynomials, sin/cos/tan, asin/acos/atan, exp, ln/log10, sqrt and abs using +, −, ×, ÷, ^ (product, quotient and chain rules are applied).</p>
+          </div>
+
+          <!-- INTEGRATION CARD -->
+          <div class="calculus-card glass-card">
+            <h2>
+              <span class="calc-card-icon">∫</span>
+              Integration
+            </h2>
+
+            <div class="calculus-input-group">
+              <label class="calculus-input-label">Function f(x)</label>
+              <input class="calculus-input" id="integ-function-input" type="text" placeholder="e.g. x^2 + sin(x)" autocomplete="off">
+            </div>
+
+            <div class="calculus-input-group">
+              <label class="calculus-input-label">Limits (for definite integral)</label>
+              <div class="calculus-limits-row">
+                <input class="calculus-input" id="integ-lower-input" type="text" placeholder="Lower bound a" autocomplete="off">
+                <input class="calculus-input" id="integ-upper-input" type="text" placeholder="Upper bound b" autocomplete="off">
+              </div>
+            </div>
+
+            <button class="calculus-btn" id="integ-calculate-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 3l14 9-14 9V3z"/>
+              </svg>
+              Integrate
+            </button>
+
+            <div class="calculus-result-box" id="integ-result-box">
+              <span class="calculus-result-label">Integral result</span>
+              <div class="calculus-result-value" id="integ-result-value">Enter a function above and click Integrate</div>
+              <div class="calculus-result-steps" id="integ-result-steps"></div>
+            </div>
+
+            <p class="calculus-note">Methods: substitution, by parts, trig identities, partial fractions, √ of quadratics. Every answer is checked by differentiating it; if no closed form is found it says so. Definite integrals use F(b) − F(a), cross-checked with Simpson's rule.</p>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- LOAD MODULES -->
+  <script src="app.js?v=4.13"></script>
+  <script src="calculator.js?v=4.13"></script>
+  <script src="converters.js?v=4.13"></script>
+  <script src="bmi.js?v=4.13"></script>
+  <script src="formula-solver.js?v=4.13"></script>
+  <script src="units.js?v=4.13"></script>
+  <script src="formula-data.js?v=4.13"></script>
+  <script src="formulas.js?v=4.13"></script>
+  <script src="unit-converter.js?v=4.13"></script>
+  <script src="calculus.js?v=4.13"></script>
+  <script src="integration.js?v=4.13"></script>
+</body>
+</html>

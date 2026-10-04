@@ -1,0 +1,16 @@
+{
+  "name": "calcora",
+  "version": "1.0.0",
+  "description": "Browser-based scientific calculator with graphing, calculus tools, unit/currency converters, BMI and a formula library. No build step, no runtime dependencies.",
+  "private": true,
+  "scripts": {
+    "test": "node tests.js",
+    "validate": "node validation/generate.js && python validation/reference.py --min-pass 0.999",
+    "mutation": "node validation/mutation.js",
+    "start": "python -m http.server 8765"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}

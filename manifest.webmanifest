@@ -1,0 +1,16 @@
+{
+  "name": "Calcora",
+  "short_name": "Calcora",
+  "description": "Scientific calculator, graphing, calculus tools, converters, BMI and a formula library. Works offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#15171c",
+  "theme_color": "#15171c",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
